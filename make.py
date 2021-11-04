@@ -3,6 +3,8 @@ import sys
 import subprocess
 import argparse
 
+list_of_valid_target_types = [ 'executable', 'library' ]
+
 def execute_shell_cmd(cmd, verbose):
     if verbose:
         print("Executing: " + cmd)
@@ -13,6 +15,8 @@ def execute_shell_cmd(cmd, verbose):
 def main():
     parser = argparse.ArgumentParser(description='Build a project as defined in recipes.json and ingredients.json.')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Verbose output. Show the recipe configuration prior to it being built and show all executing commands as they are being run. (Note: Errors are shown regardless of this setting.)')
+    parser.add_argument('-c', '--clean', action='store_true', default=False, help='Clean the build folder. Removes all files (such as object and dependency files) EXCEPT for each of the build targets.')
+    parser.add_argument('-p', '--purify', action='store_true', default=False, help='Purify the build folder. Removes the build folder and all subfiles and subdirectories for each target.')
     args = parser.parse_args()
     # TODO: Add ability to build just one target. Other flags/args?
     
@@ -21,6 +25,7 @@ def main():
 
     # TODO: Add importing ingredients.json and using that to populate each recipe
     # TODO: Refactor so that the code below reads better
+    # TODO: Add mkdir for absent folders
 
     try:
         recipes_file = open('recipes.json','r')
@@ -35,76 +40,76 @@ def main():
         sys.exit()
 
     for this_recipe in recipes["all_recipes"]:
-        if args.verbose:
-            print(json.dumps(this_recipe, indent=4))
+        
+        # Set safe values for name
+        name = this_recipe['name'] if 'name' in this_recipe else 'unnamed recipe'
 
-        #this_name = this_recipe['name']
-        #this_compiler = this_recipe['compiler']
-        #this_linker = this_recipe['linker']
-        #this_build_dir = this_recipe['build_dir']
-        #this_target = this_recipe['target']
-        #this_target_type = this_recipe['target_type']
-        #these_compiler_flags = this_recipe['compiler_flags']
-        #these_defines = this_recipe['defines']
-        #these_source_files = this_recipe['source_files']
+        # Check for required keys; abort if not present
+        compiler = this_recipe['compiler'] if 'compiler' in this_recipe else str(print("**ERROR**: Compiler not defined for " + name + ". Aborting.")) and sys.exit()
+        target_type = this_recipe['target_type'] if ('target_type' in this_recipe and this_recipe['target_type'] in list_of_valid_target_types) else str(print("**ERROR**: Invalid target type for " + name + ". Aborting.")) and sys.exit()
+        if target_type == 'executable':
+            if 'linker' in this_recipe:
+                linker = this_recipe['linker']
+            else:
+                print("**ERROR**: Linker not defined for " + name + ". Aborting.")
+                sys.exit()
+        elif target_type == 'library':
+            if 'archiver' in this_recipe:
+                archiver = this_recipe['archiver']
+            else:
+                print("**ERROR**: Archiver not defined for " + name + ". Aborting.")
+                sys.exit()
+        build_dir = this_recipe['build_dir'] if 'build_dir' in this_recipe else str(print("**ERROR**: Build directory not specified for " + name + ". Aborting.")) and sys.exit()
+        target = this_recipe['target'] if 'target' in this_recipe else str(print("**ERROR**: Target value not defined for " + name + ". Aborting.")) and sys.exit()
+        source_files = this_recipe['source_files'] if ('source_files' in this_recipe and len(this_recipe['source_files']) != 0) else str(print("**ERROR**: Source files not defined for " + name + ". Aborting.")) and sys.exit()
+
+        if args.clean:
+            execute_shell_cmd("find "+build_dir+r" -mindepth 1 -maxdepth 1 -type d -exec rm -r {} \;", args.verbose)
+            continue
+
+        if args.purify:
+            execute_shell_cmd("rm -r -f "+build_dir, args.verbose)
+            continue
+
         these_object_files = []
         for this_source_file in this_recipe['source_files']:
             these_object_files.append(this_recipe['build_dir'] + "/" + this_source_file.replace(".c", ".o"))
-        #these_include_dirs = this_recipe['include_dirs']
-        #these_libraries = this_recipe['libraries']
-        #these_library_dirs = this_recipe['library_dirs']
-        #these_linker_flags = this_recipe['linker_flags']
-        #these_pre_build_commands = this_recipe['pre_build_commands']
-        #these_post_build_commands = this_recipe['post_build_commands']
 
-        for cmd in this_recipe['pre_build_commands']:
-            execute_shell_cmd(cmd, args.verbose)
+        # Check for optional keys
+        compiler_flags = this_recipe['compiler_flags'] if 'compiler_flags' in this_recipe else ""
+        include_dirs = this_recipe['include_dirs'] if 'include_dirs' in this_recipe else ""
+        libraries = this_recipe['libraries'] if 'libraries' in this_recipe else ""
+        library_dirs = this_recipe['library_dirs'] if 'library_dirs' in this_recipe else ""
+        archiver_flags = this_recipe['archiver_flags'] if 'archiver_flags' in this_recipe else ""
+        linker_flags = this_recipe['linker_flags'] if 'linker_flags' in this_recipe else ""
+        defines = this_recipe['defines'] if 'defines' in this_recipe else ""
+        pre_build_commands = this_recipe['pre_build_commands'] if 'pre_build_commands' in this_recipe else ""
+        post_build_commands = this_recipe['post_build_commands'] if 'post_build_commands' in this_recipe else ""
 
-        # TODO: Add checks for each field; don't want to reference "this_recipe['defines']" if the user never actually listed any
-        for this_source_file in this_recipe['source_files']:
-            if 'compiler' not in this_recipe:
-                print("**ERROR**: Compiler not defined for " + this_recipe['name'] + ". Aborting.")
-                sys.exit()
-            cmd = ' '.join([this_recipe['compiler'],
-                this_recipe['compiler_flags'],
-                this_recipe['defines'],
-                '-I '+'-I '.join(this_recipe['include_dirs']),
-                "-c",
-                this_source_file,
-                "-o",
-                this_recipe['build_dir']+ "/" + this_source_file.replace(".c", ".o") ])
-            execute_shell_cmd(cmd, args.verbose)
+        if args.verbose:
+            print(json.dumps(this_recipe, indent=4))
+
+        for pre_build_cmd in pre_build_commands:
+            execute_shell_cmd(pre_build_cmd, args.verbose)
+
+        for this_source_file in source_files:
+            compile_obj_file_cmd = ' '.join([compiler,compiler_flags,defines,'-I '+'-I '.join(include_dirs),"-c",this_source_file,"-o",build_dir+"/"+this_source_file.replace(".c", ".o")])
+            execute_shell_cmd(compile_obj_file_cmd, args.verbose)
 
         # TODO: Add a way for libraries to be searched for in the recipe list
         if this_recipe['target_type'] == 'executable':
-            if 'linker' not in this_recipe:
-                print("**ERROR**: Linker not defined for " + this_recipe['name'] + ". Skipping linking step.")
-                continue
-            cmd = ' '.join([this_recipe['linker'],
-                    this_recipe['compiler_flags'],
-                    this_recipe['defines'],
-                    '-I '+'-I '.join(this_recipe['include_dirs']),
-                    ' '.join(these_object_files),
-                    "-o",
-                    this_recipe['build_dir']+ "/" + this_recipe['target'] ])
+            build_cmd = ' '.join([linker,linker_flags,defines,'-I '+'-I '.join(include_dirs),' '.join(these_object_files),'-L '+'-L '.join(library_dirs),'-l'+'-l'.join(libraries),"-o",build_dir+"/"+target])
         elif this_recipe['target_type'] == 'library':
-            if 'archiver' not in this_recipe:
-                print("**ERROR**: Archiver not defined for " + this_recipe['name'] + ". Skipping archiving step.")
-                continue
-            cmd = ' '.join([this_recipe['archiver'],
-                    this_recipe['archiver_flags'],
-                    this_recipe['defines'],
-                    this_recipe['build_dir']+ "/" + this_recipe['target'],
-                    ' '.join(these_object_files) ])
+            build_cmd = ' '.join([archiver, archiver_flags, defines, build_dir+"/"+target,' '.join(these_object_files)])
         else:
-            print("**ERROR**: Invalid target type for " + this_recipe['name'])
+            print("**ERROR**: Invalid target type for " + name)
             print("Continuing with next target")
             continue
 
-        execute_shell_cmd(cmd, args.verbose)
+        execute_shell_cmd(build_cmd, args.verbose)
         
-        for cmd in this_recipe['post_build_commands']:
-            execute_shell_cmd(cmd, args.verbose)
+        for post_build_cmd in post_build_commands:
+            execute_shell_cmd(post_build_cmd, args.verbose)
 
 if __name__ == "__main__":
     main()
