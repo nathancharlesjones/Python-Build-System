@@ -36,6 +36,7 @@ def main():
 
         #this_name = this_recipe['name']
         #this_compiler = this_recipe['compiler']
+        #this_linker = this_recipe['linker']
         #this_build_dir = this_recipe['build_dir']
         #this_target = this_recipe['target']
         #this_target_type = this_recipe['target_type']
@@ -56,23 +57,44 @@ def main():
             execute_shell_cmd(cmd, args.verbose)
 
         for this_source_file in this_recipe['source_files']:
+            if 'compiler' not in this_recipe:
+                print("**ERROR**: Compiler not defined for " + this_recipe['name'] + ". Aborting.")
+                sys.exit()
             cmd = ' '.join([this_recipe['compiler'],
                 this_recipe['compiler_flags'],
                 this_recipe['defines'],
-                ' '.join(this_recipe['include_dirs']),
+                '-I '+'-I '.join(this_recipe['include_dirs']),
                 "-c",
                 this_source_file,
                 "-o",
                 this_recipe['build_dir']+ "/" + this_source_file.replace(".c", ".o") ])
             execute_shell_cmd(cmd, args.verbose)
 
-        cmd = ' '.join([this_recipe['compiler'],
-                this_recipe['compiler_flags'],
-                this_recipe['defines'],
-                ' '.join(this_recipe['include_dirs']),
-                ' '.join(these_object_files),
-                "-o",
-                this_recipe['build_dir']+ "/" + this_recipe['target'] ])
+        if this_recipe['target_type'] == 'executable':
+            if 'linker' not in this_recipe:
+                print("**ERROR**: Linker not defined for " + this_recipe['name'] + ". Skipping linking step.")
+                continue
+            cmd = ' '.join([this_recipe['linker'],
+                    this_recipe['compiler_flags'],
+                    this_recipe['defines'],
+                    '-I '+'-I '.join(this_recipe['include_dirs']),
+                    ' '.join(these_object_files),
+                    "-o",
+                    this_recipe['build_dir']+ "/" + this_recipe['target'] ])
+        elif this_recipe['target_type'] == 'library':
+            if 'archiver' not in this_recipe:
+                print("**ERROR**: Archiver not defined for " + this_recipe['name'] + ". Skipping archiving step.")
+                continue
+            cmd = ' '.join([this_recipe['archiver'],
+                    this_recipe['archiver_flags'],
+                    this_recipe['defines'],
+                    this_recipe['build_dir']+ "/" + this_recipe['target'],
+                    ' '.join(these_object_files) ])
+        else:
+            print("**ERROR**: Invalid target type for " + this_recipe['name'])
+            print("Continuing with next target")
+            continue
+
         execute_shell_cmd(cmd, args.verbose)
         
         for cmd in this_recipe['post_build_commands']:
