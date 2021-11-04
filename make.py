@@ -14,7 +14,7 @@ def main():
         print("**ERROR**: Could not read '../recipes.json'. Ensure that this file has proper JSON syntax and follows the project conventions for defining recipe values. See here for more information.")
         sys.exit()
 
-
+    print(json.dumps(recipes, indent=4))
 
 if __name__ == "__main__":
     main()
