@@ -14,9 +14,13 @@ def main():
     parser = argparse.ArgumentParser(description='Build a project as defined in recipes.json and ingredients.json.')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Verbose output. Show the recipe configuration prior to it being built and show all executing commands as they are being run. (Note: Errors are shown regardless of this setting.)')
     args = parser.parse_args()
+    # TODO: Add ability to build just one target. Other flags/args?
     
     #import os
     #print(os.getcwd())
+
+    # TODO: Add importing ingredients.json and using that to populate each recipe
+    # TODO: Refactor so that the code below reads better
 
     try:
         recipes_file = open('recipes.json','r')
@@ -56,6 +60,7 @@ def main():
         for cmd in this_recipe['pre_build_commands']:
             execute_shell_cmd(cmd, args.verbose)
 
+        # TODO: Add checks for each field; don't want to reference "this_recipe['defines']" if the user never actually listed any
         for this_source_file in this_recipe['source_files']:
             if 'compiler' not in this_recipe:
                 print("**ERROR**: Compiler not defined for " + this_recipe['name'] + ". Aborting.")
@@ -70,6 +75,7 @@ def main():
                 this_recipe['build_dir']+ "/" + this_source_file.replace(".c", ".o") ])
             execute_shell_cmd(cmd, args.verbose)
 
+        # TODO: Add a way for libraries to be searched for in the recipe list
         if this_recipe['target_type'] == 'executable':
             if 'linker' not in this_recipe:
                 print("**ERROR**: Linker not defined for " + this_recipe['name'] + ". Skipping linking step.")
