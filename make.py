@@ -1,7 +1,13 @@
+#! /bin/python3
+
 import json
 import sys
 import subprocess
 import argparse
+import os
+
+# TODO: Add more comments
+# TODO: How to add subprojects and other dependencies?
 
 list_of_valid_target_types = [ 'executable', 'library' ]
 
@@ -17,15 +23,19 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Verbose output. Show the recipe configuration prior to it being built and show all executing commands as they are being run. (Note: Errors are shown regardless of this setting.)')
     parser.add_argument('-c', '--clean', action='store_true', default=False, help='Clean the build folder. Removes all files (such as object and dependency files) EXCEPT for each of the build targets.')
     parser.add_argument('-p', '--purify', action='store_true', default=False, help='Purify the build folder. Removes the build folder and all subfiles and subdirectories for each target.')
+    parser.add_argument('-z', '--zip', action='store_true', default=False, help='Purify the build folder. Removes the build folder and all subfiles and subdirectories for each target.')
     args = parser.parse_args()
     # TODO: Add ability to build just one target. Other flags/args?
+    #   - Option to change default names for recipes.json and ingredients.json
+    #   - Easier way to implement -c/-p than with boolean flag and if statement?
+    # TODO: Change meaning of building, cleaning, purifying, and zipping if a target is specified
+    # TODO: Add description of JSON files in help string. Link to github.
     
-    #import os
-    #print(os.getcwd())
-
     # TODO: Add importing ingredients.json and using that to populate each recipe
     # TODO: Refactor so that the code below reads better
-    # TODO: Add mkdir for absent folders
+    # TODO: Add zip commands
+    # TODO: Add dependency ... stuff
+    # TODO: Add checks to only build if dependency is newer than target
 
     try:
         recipes_file = open('recipes.json','r')
@@ -87,16 +97,21 @@ def main():
         post_build_commands = this_recipe['post_build_commands'] if 'post_build_commands' in this_recipe else ""
 
         if args.verbose:
+            print("Building the following recipe:")
             print(json.dumps(this_recipe, indent=4))
 
         for pre_build_cmd in pre_build_commands:
             execute_shell_cmd(pre_build_cmd, args.verbose)
 
         for this_source_file in source_files:
+            path, filename = os.path.split(this_source_file)
+            execute_shell_cmd("mkdir -p "+build_dir+"/"+path, args.verbose)
             compile_obj_file_cmd = ' '.join([compiler,compiler_flags,defines,'-I '+'-I '.join(include_dirs),"-c",this_source_file,"-o",build_dir+"/"+this_source_file.replace(".c", ".o")])
             execute_shell_cmd(compile_obj_file_cmd, args.verbose)
 
         # TODO: Add a way for libraries to be searched for in the recipe list
+        #   - Separate into libraries.json and executables.json?
+
         if this_recipe['target_type'] == 'executable':
             build_cmd = ' '.join([linker,linker_flags,defines,'-I '+'-I '.join(include_dirs),' '.join(these_object_files),'-L '+'-L '.join(library_dirs),'-l'+'-l'.join(libraries),"-o",build_dir+"/"+target])
         elif this_recipe['target_type'] == 'library':
