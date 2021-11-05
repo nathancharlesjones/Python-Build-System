@@ -1,9 +1,11 @@
 #! /bin/python3
 
+from argparse_helper import initialize_command_line_interface, get_command_line_args
+from project_targets import get_project_targets
+
 import json
 import sys
-import subprocess
-import argparse
+from subprocess_helper import execute_shell_cmd
 import os
 
 # TODO: Add more comments
@@ -11,31 +13,19 @@ import os
 
 list_of_valid_target_types = [ 'executable', 'library' ]
 
-def execute_shell_cmd(cmd, verbose):
-    if verbose:
-        print("Executing: " + cmd)
-    process = subprocess.run([cmd], shell=True, text=True)
-    if verbose and process.stdout:
-        print("Output: " + process.stdout)
-
 def main():
-    parser = argparse.ArgumentParser(description='Build a project as defined in recipes.json and ingredients.json.')
-    parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Verbose output. Show the recipe configuration prior to it being built and show all executing commands as they are being run. (Note: Errors are shown regardless of this setting.)')
-    parser.add_argument('-c', '--clean', action='store_true', default=False, help='Clean the build folder. Removes all files (such as object and dependency files) EXCEPT for each of the build targets.')
-    parser.add_argument('-p', '--purify', action='store_true', default=False, help='Purify the build folder. Removes the build folder and all subfiles and subdirectories for each target.')
-    parser.add_argument('-z', '--zip', action='store_true', default=False, help='Purify the build folder. Removes the build folder and all subfiles and subdirectories for each target.')
-    args = parser.parse_args()
-    # TODO: Add ability to build just one target. Other flags/args?
-    #   - Option to change default names for recipes.json and ingredients.json
-    #   - Easier way to implement -c/-p than with boolean flag and if statement?
-    # TODO: Change meaning of building, cleaning, purifying, and zipping if a target is specified
-    # TODO: Add description of JSON files in help string. Link to github.
+    initialize_command_line_interface()
+    args = get_command_line_args()
+
+    targets = get_project_targets()
     
     # TODO: Add importing ingredients.json and using that to populate each recipe
     # TODO: Refactor so that the code below reads better
     # TODO: Add zip commands
     # TODO: Add dependency ... stuff
     # TODO: Add checks to only build if dependency is newer than target
+    # TODO: Change strings cats to .format
+    # TODO: Add cpp_compiler. Change compiler_flags to c_flags and cpp_flags.
 
     try:
         recipes_file = open('recipes.json','r')
@@ -55,7 +45,7 @@ def main():
         name = this_recipe['name'] if 'name' in this_recipe else 'unnamed recipe'
 
         # Check for required keys; abort if not present
-        compiler = this_recipe['compiler'] if 'compiler' in this_recipe else str(print("**ERROR**: Compiler not defined for " + name + ". Aborting.")) and sys.exit()
+        compiler = this_recipe['compiler'] if 'compiler' in this_recipe else str(print("**ERROR**: Compiler not defined for {0} Aborting.".format(name))) and sys.exit()
         target_type = this_recipe['target_type'] if ('target_type' in this_recipe and this_recipe['target_type'] in list_of_valid_target_types) else str(print("**ERROR**: Invalid target type for " + name + ". Aborting.")) and sys.exit()
         if target_type == 'executable':
             if 'linker' in this_recipe:

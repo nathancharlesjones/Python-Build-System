@@ -15,7 +15,7 @@
     // Display line endings in the status bar
     "show_line_endings": true
     Once I did, I could select the line ending I wanted on the bottom toolbar. Many forums I read when trying to solve this problem also recommended a program called dos2unix. 
-	- Or "docker run -it --rm -v ${PWD}:/app devenv-simple-build-system /bin/bash -c "./Simple-Build-System/make.py" from project root
+	- Or "docker run -it --rm -v ${PWD}:/app devenv-simple-build-system /bin/bash -c "./Simple-Build-System/make.py"" from project root
 	- "/app" should match the "WORKDIR" variable from the Dockerfile
 	- Alias?
 - Run just "docker run -it --rm -v ${PWD}:/app devenv-simple-build-system /bin/bash" to get to a shell
