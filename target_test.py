@@ -1,3 +1,5 @@
+#! /bin/python3
+
 import target
 
 libtest_build_dir = "alt"
@@ -13,3 +15,5 @@ hello_world = target.executable(name='hello-world',c_compiler='gcc',linker='gcc'
 	pre_build_cmds=["echo Beginning build for hello-world"],
 	post_build_cmds=["echo Finished building hello-world","./build/main.exe"])
 print(hello_world)
+
+hello_world.build(True)

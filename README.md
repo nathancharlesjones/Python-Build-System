@@ -1,7 +1,7 @@
 # Simple Build System
 
 ## Building
-- Install Docker
+- Install Docker and ensure it is running
 - Edit "Dockerfile" to include any programs (or dependencies?) you need to build your project
 - Run "docker build -f Dockerfile -t devenv-simple-build-system ." from Simple-Build-System folder to build the Docker image
 - Run "docker run -it --rm -v ${PWD}:/app devenv-simple-build-system /bin/bash -c "make.py" from Simple-Build-System folder
