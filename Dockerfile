@@ -8,11 +8,12 @@ WORKDIR /app
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y unzip bzip2 \
-	gcc-arm-none-eabi=15:9-2019-q4-0ubuntu1
+RUN apt-get update && apt-get install -y \
+	build-essential \
+	gdb \
+	gcc-arm-none-eabi=15:9-2019-q4-0ubuntu1 \
+	gdb-multiarch \
+	zip \
+	git-all
 
-ENV GNU_INSTALL_ROOT /usr/bin/
-ENV GNU_PREFIX arm-none-eabi
-
-# Add debugging
-RUN apt-get -y install gdb-multiarch
+RUN cd /app && git clone https://github.com/mpaland/printf.git

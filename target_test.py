@@ -17,3 +17,15 @@ hello_world = target.executable(name='hello-world',c_compiler='gcc',linker='gcc'
 print(hello_world)
 
 hello_world.build(True)
+
+import os, fnmatch
+def find(pattern, path):
+    result = []
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            if fnmatch.fnmatch(name, pattern):
+                result.append(os.path.join(root, name))
+    return result
+
+for library in hello_world.libraries:
+	print(find('lib{0}.a'.format(library), './'))

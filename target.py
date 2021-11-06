@@ -1,5 +1,8 @@
 from subprocess_helper import execute_shell_cmd
+from find_helper import find
 import os
+
+# TODO: Add more comments
 
 class target:
     """ Parent class for defining project targets. """
@@ -14,8 +17,9 @@ class target:
         self.build_local_dependencies()
         
         built=False
-        for file in self.object_files:
-            if not os.path.exists(file) or not os.path.exists('{0}/{1}'.format(self.build_dir,self.target)) or os.path.getmtime(file) > os.path.getmtime('{0}/{1}'.format(self.build_dir,self.target)):
+        for file in self.object_files+self.get_lib_targets_list():
+            # If the target doesn't exist OR object files or library files are newer than target...
+            if not os.path.exists('{0}/{1}'.format(self.build_dir,self.target)) or os.path.getmtime(file) > os.path.getmtime('{0}/{1}'.format(self.build_dir,self.target)):
                 build_cmd = self.form_build_cmd()
                 execute_shell_cmd(build_cmd, verbose)
                 built=True
@@ -36,17 +40,22 @@ class target:
                 compiler = self.c_compiler
                 compiler_flags = self.c_flags
                 this_object_file = this_source_file.replace(".c",".o")
+                this_dep_file = this_source_file.replace(".c",".d")
             else:
                 compiler = self.cpp_compiler
                 compiler_flags = self.cpp_flags
                 this_object_file = this_source_file.replace(".cpp",".o")
                 this_object_file = this_source_file.replace(".cxx",".o")
+                this_dep_file = this_source_file.replace(".cpp",".d")
+                this_dep_file = this_source_file.replace(".cxx",".d")
             
+            # TODO: Add checks for dependency files
+            # if object file doesn't exist or object file dependencies are newer than object file...
             if not os.path.exists("{0}/{1}".format(self.build_dir,this_object_file)) or os.path.getmtime(this_source_file) > os.path.getmtime("{0}/{1}".format(self.build_dir,this_object_file)):
                 compiler_flags_str = ' '.join(compiler_flags)
                 defines_str = ' '.join(self.defines)
                 include_dirs_str = ' '.join(["-I "+inc_dir for inc_dir in self.include_dirs])
-                compile_obj_file_cmd = "{0} {1} {2} {3} -c {4} -o {5}/{6}".format(compiler,compiler_flags_str,defines_str,include_dirs_str,this_source_file,self.build_dir,this_object_file)
+                compile_obj_file_cmd = "{0} {1} {2} {3} -MT {4} -MMD -MP -MF {5}/{6} -c {7} -o {5}/{4}".format(compiler,compiler_flags_str,defines_str,include_dirs_str,this_object_file,self.build_dir,this_dep_file,this_source_file)
                 execute_shell_cmd(compile_obj_file_cmd, verbose)
             else:
                 print("Nothing to be done for {0}".format(this_object_file))
@@ -65,6 +74,31 @@ class target:
         execute_shell_cmd("rm -r -f {0}".format(self.build_dir), verbose)
 
     def zip(self, verbose=False):
+        lib_targets_str = self.get_lib_targets_str()
+        execute_shell_cmd("zip -r {0}/{1}.zip {0}/{2} {3}".format(self.build_dir,self.name,self.target,lib_targets_str), verbose)
+
+    def execute(self, cmd, verbose=False):
+        if cmd == 'clean':
+            self.clean(verbose)
+        elif cmd == 'purify':
+            self.purify(verbose)
+        elif cmd == 'zip':
+            self.zip(verbose)
+        else:
+            self.build(verbose)
+
+    def get_lib_targets_list(self):
+        lib_targets = []
+        for library in self.libraries:
+            lib_targets += find('lib{0}.a'.format(library), './')
+        return lib_targets
+
+    def get_lib_targets_str(self):
+        lib_targets_str = ' '.join(self.get_lib_targets_list)
+        return lib_targets_str
+
+    def get_dependencies_list(self, this_object_file):
+        # TODO: Complete this function
         pass
 
     def __str__(self):

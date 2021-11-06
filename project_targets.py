@@ -1,5 +1,8 @@
 import target
 
+# TODO: Add default rules/ingredients
+# TODO: Make these variables instead of a function?
+
 def get_project_targets():
 	targets = {}
 
