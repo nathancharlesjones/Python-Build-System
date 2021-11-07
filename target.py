@@ -31,21 +31,20 @@ class target:
             execute_shell_cmd(post_build_cmd, verbose)
 
     def compile_object_files(self, verbose=False):
-        import os
         for this_source_file in self.source_files:
             path, filename = os.path.split(this_source_file)
             execute_shell_cmd("mkdir -p {0}/{1}".format(self.build_dir, path), verbose)
             
+            source_file_extension = os.path.splitext(this_source_file)[1]
+            this_object_file = this_source_file.replace(source_file_extension,".o")
+            this_dep_file = this_source_file.replace(source_file_extension,".d")
+
             if os.path.splitext(this_source_file)[1] == ".c":
                 compiler = self.c_compiler
                 compiler_flags = self.c_flags
-                this_object_file = this_source_file.replace(".c",".o")
-                this_dep_file = this_source_file.replace(".c",".d")
             elif os.path.splitext(this_source_file)[1] == ".cpp":
                 compiler = self.cpp_compiler
                 compiler_flags = self.cpp_flags
-                this_object_file = this_source_file.replace(".cpp",".o")
-                this_dep_file = this_source_file.replace(".cpp",".d")
             else:
                 print("**WARNING**: Unknown file extension, {0}. Expecting '.c' or '.cpp'.".format(this_source_file))
             
