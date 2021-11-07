@@ -1,5 +1,4 @@
-from subprocess_helper import execute_shell_cmd
-from find_helper import find
+from helper import execute_shell_cmd, find, get_dependencies_list
 import os
 
 # TODO: Add more comments
@@ -13,11 +12,12 @@ class target:
     def build(self, verbose=False):
         for pre_build_cmd in self.pre_build_cmds:
             execute_shell_cmd(pre_build_cmd, verbose)
+        
         self.compile_object_files()
         self.build_local_dependencies()
         
         built=False
-        for file in self.object_files+self.get_lib_targets_list():
+        for file in self.object_files+self.local_dep_target_list:
             # If the target doesn't exist OR object files or library files are newer than target...
             if not os.path.exists('{0}/{1}'.format(self.build_dir,self.target)) or os.path.getmtime(file) > os.path.getmtime('{0}/{1}'.format(self.build_dir,self.target)):
                 build_cmd = self.form_build_cmd()
@@ -36,26 +36,35 @@ class target:
             path, filename = os.path.split(this_source_file)
             execute_shell_cmd("mkdir -p {0}/{1}".format(self.build_dir, path), verbose)
             
-            if ".c" in this_source_file:
+            if os.path.splitext(this_source_file)[1] == ".c":
                 compiler = self.c_compiler
                 compiler_flags = self.c_flags
                 this_object_file = this_source_file.replace(".c",".o")
                 this_dep_file = this_source_file.replace(".c",".d")
-            else:
+            elif os.path.splitext(this_source_file)[1] == ".cpp":
                 compiler = self.cpp_compiler
                 compiler_flags = self.cpp_flags
                 this_object_file = this_source_file.replace(".cpp",".o")
-                this_object_file = this_source_file.replace(".cxx",".o")
                 this_dep_file = this_source_file.replace(".cpp",".d")
-                this_dep_file = this_source_file.replace(".cxx",".d")
+            else:
+                print("**WARNING**: Unknown file extension, {0}. Expecting '.c' or '.cpp'.".format(this_source_file))
             
-            # TODO: Add checks for dependency files
+            dep_list = get_dependencies_list("{0}/{1}".format(self.build_dir,this_dep_file))
+
             # if object file doesn't exist or object file dependencies are newer than object file...
-            if not os.path.exists("{0}/{1}".format(self.build_dir,this_object_file)) or os.path.getmtime(this_source_file) > os.path.getmtime("{0}/{1}".format(self.build_dir,this_object_file)):
+            build = False
+            if not os.path.exists("{0}/{1}".format(self.build_dir,this_object_file)):
+                build = True
+            for file in dep_list:
+                if os.path.getmtime(file) > os.path.getmtime("{0}/{1}".format(self.build_dir,this_object_file)):
+                    build = True
+
+            if build:
                 compiler_flags_str = ' '.join(compiler_flags)
                 defines_str = ' '.join(self.defines)
                 include_dirs_str = ' '.join(["-I "+inc_dir for inc_dir in self.include_dirs])
-                compile_obj_file_cmd = "{0} {1} {2} {3} -MT {4} -MMD -MP -MF {5}/{6} -c {7} -o {5}/{4}".format(compiler,compiler_flags_str,defines_str,include_dirs_str,this_object_file,self.build_dir,this_dep_file,this_source_file)
+                compile_obj_file_cmd = "{0} {1} {2} {3} -MMD -MF {4}/{5} -c {6} -o {4}/{7}".format(compiler,compiler_flags_str,defines_str,include_dirs_str,self.build_dir,this_dep_file,this_source_file,this_object_file)
+                print(compile_obj_file_cmd)
                 execute_shell_cmd(compile_obj_file_cmd, verbose)
             else:
                 print("Nothing to be done for {0}".format(this_object_file))
@@ -74,8 +83,10 @@ class target:
         execute_shell_cmd("rm -r -f {0}".format(self.build_dir), verbose)
 
     def zip(self, verbose=False):
-        lib_targets_str = self.get_lib_targets_str()
-        execute_shell_cmd("zip -r {0}/{1}.zip {0}/{2} {3}".format(self.build_dir,self.name,self.target,lib_targets_str), verbose)
+        execute_shell_cmd("zip -r {0}/{1}.zip {0}/{2} {3}".format(self.build_dir,self.name,self.target,self.local_dep_target_list), verbose)
+
+    def show(self, verbose=False):
+        pass
 
     def execute(self, cmd, verbose=False):
         if cmd == 'clean':
@@ -84,22 +95,10 @@ class target:
             self.purify(verbose)
         elif cmd == 'zip':
             self.zip(verbose)
-        else:
+        elif cmd == 'list':
+            self.show(verbose)
+        elif cmd == 'build':
             self.build(verbose)
-
-    def get_lib_targets_list(self):
-        lib_targets = []
-        for library in self.libraries:
-            lib_targets += find('lib{0}.a'.format(library), './')
-        return lib_targets
-
-    def get_lib_targets_str(self):
-        lib_targets_str = ' '.join(self.get_lib_targets_list)
-        return lib_targets_str
-
-    def get_dependencies_list(self, this_object_file):
-        # TODO: Complete this function
-        pass
 
     def __str__(self):
         pass
@@ -153,6 +152,7 @@ class executable(target):
         self.library_dirs = library_dirs
         
         self.local_dependencies = local_dependencies
+        self.local_dep_target_list = ["{0}/{1}".format(dep.build_dir,dep.target) for dep in self.local_dependencies]
         
         self.pre_build_cmds = pre_build_cmds
         
@@ -169,8 +169,66 @@ class executable(target):
         return "{0} {1} {2} {3} {4} {5} {6} -o {7}/{8}".format(self.linker,linker_flags_str,defines_str,include_dirs_str,object_files_str,library_dirs_str,libraries_str,self.build_dir,self.target)
 
 
+    def show(self, verbose=False):
+        if not verbose:
+            print("- {0}".format(self.name))
+        else:
+            print(self)
+
+
     def __str__(self):
-        return "Test"
+        repr = '''{1} is defined as follows:
+- {0}{1}
+- {2}{3}
+- {4}{5}
+- {6}{7}
+- {8}{9}
+- {10}{11}
+- {12}{13}
+- {14}{15}
+- {16}{17}
+- {18}{19}
+- {20}{21}
+- {22}{23}
+- {24}{25}
+- {26}{27}
+- {28}{29}
+- {30}{31}
+- {32}{33} '''.format( "name:".ljust(25,'.'),
+                        self.name,
+                        "target:".ljust(25,'.'),
+                        self.target,
+                        "build_dir:".ljust(25,'.'),
+                        self.build_dir,
+                        "c_compiler:".ljust(25,'.'),
+                        self.c_compiler,
+                        "c_flags:".ljust(25,'.'),
+                        self.c_flags,
+                        "cpp_compiler:".ljust(25,'.'),
+                        self.cpp_compiler,
+                        "cpp_flags:".ljust(25,'.'),
+                        self.cpp_flags,
+                        "linker:".ljust(25,'.'),
+                        self.linker,
+                        "linker_flags:".ljust(25,'.'),
+                        self.linker_flags,
+                        "defines:".ljust(25,'.'),
+                        self.defines,
+                        "include_dirs:".ljust(25,'.'),
+                        self.include_dirs,
+                        "source_files:".ljust(25,'.'),
+                        self.source_files,
+                        "libraries:".ljust(25,'.'),
+                        self.libraries,
+                        "library_dirs:".ljust(25,'.'),
+                        self.library_dirs,
+                        "local_dependencies:".ljust(25,'.'),
+                        [dep.name for dep in self.local_dependencies],
+                        "pre_build_cmds:".ljust(25,'.'),
+                        self.pre_build_cmds,
+                        "post_build_cmds:".ljust(25,'.'),
+                        self.post_build_cmds)
+        return repr
 
 
 
@@ -223,6 +281,7 @@ class library(target):
         self.library_dirs = library_dirs
         
         self.local_dependencies = local_dependencies
+        self.local_dep_target_list = ["{0}/{1}".format(dep.build_dir,dep.target) for dep in self.local_dependencies]
         
         self.pre_build_cmds = pre_build_cmds
         
@@ -234,5 +293,62 @@ class library(target):
         object_files_str = ' '.join(self.object_files)
         return "{0} {1} {2} {3}/{4} {5}".format(self.archiver,archiver_flags_str,defines_str,self.build_dir,self.target,object_files_str)
 
+    def show(self, verbose=False):
+        if not verbose:
+            print("- {0}".format(self.name))
+        else:
+            print(self)
+
     def __str__(self):
-        return "test"
+        repr = '''{1} is defined as follows:
+- {0}{1}
+- {2}{3}
+- {4}{5}
+- {6}{7}
+- {8}{9}
+- {10}{11}
+- {12}{13}
+- {14}{15}
+- {16}{17}
+- {18}{19}
+- {20}{21}
+- {22}{23}
+- {24}{25}
+- {26}{27}
+- {28}{29}
+- {30}{31}
+- {32}{33} '''.format( "name:".ljust(25,'.'),
+                        self.name,
+                        "target:".ljust(25,'.'),
+                        self.target,
+                        "build_dir:".ljust(25,'.'),
+                        self.build_dir,
+                        "c_compiler:".ljust(25,'.'),
+                        self.c_compiler,
+                        "c_flags:".ljust(25,'.'),
+                        self.c_flags,
+                        "cpp_compiler:".ljust(25,'.'),
+                        self.cpp_compiler,
+                        "cpp_flags:".ljust(25,'.'),
+                        self.cpp_flags,
+                        "archiver:".ljust(25,'.'),
+                        self.archiver,
+                        "archiver_flags:".ljust(25,'.'),
+                        self.archiver_flags,
+                        "defines:".ljust(25,'.'),
+                        self.defines,
+                        "include_dirs:".ljust(25,'.'),
+                        self.include_dirs,
+                        "source_files:".ljust(25,'.'),
+                        self.source_files,
+                        "libraries:".ljust(25,'.'),
+                        self.libraries,
+                        "library_dirs:".ljust(25,'.'),
+                        self.library_dirs,
+                        "local_dependencies:".ljust(25,'.'),
+                        [dep.name for dep in self.local_dependencies],
+                        "pre_build_cmds:".ljust(25,'.'),
+                        self.pre_build_cmds,
+                        "post_build_cmds:".ljust(25,'.'),
+                        self.post_build_cmds)
+        return repr
