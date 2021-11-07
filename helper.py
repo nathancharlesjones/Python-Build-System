@@ -2,6 +2,10 @@ import argparse
 import subprocess
 import os
 import fnmatch
+from functools import reduce
+
+def at_least_one_dependency_is_newer_than(file, dep_list):
+    return reduce(lambda a, b: a or b, [os.path.getmtime(dep) > os.path.getmtime(file) for dep in dep_list])
 
 def execute_shell_cmd(cmd, verbose):
     if verbose:
@@ -42,17 +46,21 @@ def get_dependencies_list(dep_file):
         with open(dep_file) as f:
             deps = f.read()
         deps = deps.replace('\n',' ')
-        dep_list_dirty = deps.split(' ')
-        for item in dep_list_dirty:
-            if file_exists(item):
-                dep_list += [item]
+        dep_list = deps.split(' ')
+        dep_list = list(filter(lambda file: file_exists(file), dep_list))
     return dep_list
 
 '''
-Saving for posterity's sake, since the juxtaposition with my second solution, above, is interesting
-to me.
-1) The solution above is shorter, cleaner, and, I think, more robust. Why? I think because it has fewer requirements, fewer ways it could break. The code below requires each line of text to end in either a continuation character (backslash) or a complete file; it requires that each line have the character sequence ": " after which needs to come a space-separated list of files.
+Saving for posterity's sake, since the juxtaposition with my second solution, above, is interesting to me.
+1) The above solution is shorter, cleaner, and, I think, more robust. Why? I think because it has fewer requirements, fewer ways it could break. The code below requires each line of text to end in either a continuation character (backslash) or a complete file; it requires that each line have the character sequence ": " after which needs to come a space-separated list of files. It has more loops (2 more) and more conditionals (2 more).
 2) The code below actually has an error! Using the .remove method inside a for loop where I'm iterating over the same list that I've removing elements from is always an error, since iteration skips subsequent elements after I remove an item! Put differently, if I remove the item at position 2 the rest of the loop shifts to the left; the item at position 3 becomes the new item at position 2, the item at position 4 moves to position 3, etc. However, the loop still tries to access the item at position 3 on the next iteration of the loop, which means that it skips over whatever item was previously sitting at position 3 (and is now sitting in position 2)!
+
+Some conclusions from these observations:
+- Creative problem solving
+- Leverage the language and libraries you're using
+- Loops and conditionals add to the possible code paths and make a program difficult to reason about. Leverage polymorphism or collection operations, instead.
+- Always test your code!
+
 def get_dependencies_list(dep_file):
     dep_list = []
     if os.path.exists(dep_file):
@@ -71,6 +79,18 @@ def get_dependencies_list(dep_file):
             dep_list.remove(item)
     return dep_list
 '''
+
+def get_file_extension(file):
+    return os.path.splitext(file)[1]
+
+def list_of_files_contains_c_files(files):
+    return reduce(lambda a, b: a or b, [get_file_extension(file) == '.c' for file in files])
+
+def list_of_files_contains_cpp_files(files):
+    return reduce(lambda a, b: a or b, [get_file_extension(file) == '.cpp' for file in files])
+
+def list_of_files_contains_s_or_S_files(files):
+    return reduce(lambda a, b: a or b, [get_file_extension(file) == '.s' or get_file_extension(file) == '.S' for file in files])
 
 def remove_from_dict_all_except(dict, key):
     dict = { key : dict[key] }

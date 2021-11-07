@@ -13,9 +13,12 @@ RUN apt-get update
 # Get GNU tools
 RUN apt-get install -y build-essential gdb
 
-# Get gdbgui. Run inside container with "-r" option to expose the gdbgui server to the host machine.
-# Then you can connect to it from the host machine by navigating to "localhost:PORT" from a web
-# browser, where PORT is the port number that gdbgui says it's connected to.
+# Get gdbgui
+# Usage: Start container with "-p 5000:5000" to expose port 5000 (the default port for gdbgui) to the
+# host machine. Run gdbgui from inside container with "gdbgui -r ./myprogram" to expose the gdbgui server 
+# to the host machine. Then you can connect to gdbgui from the host machine by navigating to 
+# "localhost:5000" from a web browser. If port 5000 doesn't work, you can tell gdbgui to use a different
+# port with "gdbgui --port ####". Make sure to start the container with this new port number, if you do.
 RUN apt-get install -y python3-pip
 RUN pip3 install gdbgui
 
@@ -41,6 +44,8 @@ RUN cd /tmp && git clone https://github.com/mpaland/printf.git
 #  - "docker build -f Dockerfile -t <NAME> .", where NAME is something like "devenv-simple-build-system"
 # 2) Start the container, run a command, and stop the container with:
 #  - "docker run -it --rm -v ${PWD}:/app <NAME> /bin/bash -c "<CMD>""
+#  - Or "docker run -it --rm -v ${PWD}:/app -p 5000:5000 <NAME> /bin/bash -c "<CMD>"" if you're intending
+#    to connect to gdbgui.
 #  - "/app" should match the value of WORKDIR defined in the Dockerfile above
 #  - Use the same NAME as in the first step; CMD is the shell command you want executed like "ls" or "make"
 #  - This starts the container in interactive mode, mounting the current working directory on the host
