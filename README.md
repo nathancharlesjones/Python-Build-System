@@ -59,7 +59,7 @@ def get_project_targets():
 
 ## How do I use it?
 
-Check out [this sample project]() or follow the directions below:
+Check out [this sample project](https://github.com/nathancharlesjones/A-Tale-of-Four-Build-Systems/tree/main/Python-build-system) or follow the directions below:
 
 1) Clone this repo into your desired project folder. I.e.
 ```
