@@ -4,8 +4,6 @@ from helper import (execute_shell_cmd, find, get_dependencies_list,
                     list_of_files_contains_cpp_files, list_of_files_contains_s_or_S_files)
 import os
 
-# TODO: Add more comments
-
 class target:
     """ Parent class for defining project targets. """
 
