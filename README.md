@@ -195,7 +195,7 @@ optional arguments:
   -v, --verbose         Verbose output. Show the recipe configuration prior to it being built and show 
                         all executing commands as they are being run. (Note: Errors are shown regardless of this setting.)
 ```
-7) Later on, feel free to edit or extend `make.py`! It's just a Python script, after all.
+7) Later on, feel free to edit or extend `make.py`! It's just a Python script, after all. It's basically begging for someone to add additional command-line flags that utilize things like [pyOCD](https://github.com/pyocd/pyOCD), [pyGDB](https://pypi.org/project/pygdb/), [pyLink](https://pylink.readthedocs.io/en/latest/), or [pyFTDI](https://eblot.github.io/pyftdi/) to create a singular command-line interface for all of your developing, debugging, and testing needs.
 
 ## Why'd you do it?
 
