@@ -2,7 +2,7 @@
 
 ## What is it?
 
-A Python script that reads a description of a project from `project_targets.py` (see example below) and calls the specified compiler/assembler/linker/archiver to fully build the project. Python Build System automatically tracks file dependencies so it will only rebuild the parts of the project that are out of date with the files they depend on, like any modern build system. It accepts a number of command-line arguments that allow for:
+A Python script that reads a description of a C/C++ project from `project_targets.py` (see example below) and calls the specified compiler/assembler/linker/archiver to fully build the project. Python Build System automatically tracks file dependencies so it will only rebuild the parts of the project that are out of date with the files they depend on, like any modern build system. It accepts a number of command-line arguments that allow for:
 
 - building an entire project,
 - cleaning/purifying the build folder,
