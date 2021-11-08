@@ -155,7 +155,9 @@ def get_project_targets():
 
 Or, if you're using Docker:
 
-`docker run -it --rm -v ${PWD}:/app devenv-simple-build-system /bin/bash -c "./Python-Build-System/make.py -b"`
+`docker run -it --rm -v ${PWD}:/app devenv-simple-build-system /bin/bash -c "./Python-Build-System/make.py -b"`,
+
+where `<NAME>` is the same name you gave the Docker container above.
 
 If you see an error like `bash: ./Simple-Build-System/make.py: /bin/python3^M: bad interpreter: No such file or directory` it's probably because you're editing `make.py` on Windows (and using Windows line endings, CRLF) but the file is being run on a Unix machine (which is expecting Unix line endings, LF only). If this is the problem, you'll need to figure out how to change to Unix line endings. The simplest fix seems to be to change the default line ending in your text editor; I use Sublime Text and [this thread](https://stackoverflow.com/questions/39680585/how-do-configure-sublime-to-always-convert-to-unix-line-endings-on-save) recommended I add the following keys to my user settings:
 ```
