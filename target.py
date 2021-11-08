@@ -55,7 +55,7 @@ class target:
                 
             if self.object_file_needs_building(obj_file_and_path):
                 flags_str = ' '.join(flags)
-                defines_str = ' '.join(self.defines)
+                defines_str = ' '.join(["-D"+define for define in self.defines])
                 include_dirs_str = ' '.join(["-I "+inc_dir for inc_dir in self.include_dirs])
                 dep_file_and_path = self.get_dep_file_and_path_from_obj_file_and_path(obj_file_and_path)
                 compile_obj_file_cmd = " ".join([program,flags_str,defines_str,include_dirs_str,"-MMD -MF",dep_file_and_path,"-c",this_source_file,"-o",obj_file_and_path])
