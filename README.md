@@ -91,6 +91,7 @@ def get_project_targets():
 ```
 3) The Python module `target.py` defines two types of targets: `library` and `executable`. A `library` target builds a static library and `executable` builds an executable binary. They accept the parameters below. Not all are required; `make.py` should warn you when something is missing that's required.
     - `library` objects
+
 | Field              | Type            | Required?                                        | Description                                                                                                                                                                                                                                                   |
 |--------------------|-----------------|--------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name               | String          | No                                               | Name to be used for this target. Given to "-t" when building/cleaning/purifying/zipping a single target.                                                                                                                                                      |
@@ -112,7 +113,9 @@ def get_project_targets():
 | local_dependencies | List of strings | No                                               | List of target.library objects that this program is dependent on. This needs to be the actual target.library object as the object's build method will be invoked by the program when this executable is being built, to ensure that all files are up to date. |
 | pre_build_cmds     | List of strings | No                                               | List of shell commands to be executed prior to building this project. Should be typed exactly as they would be in the shell, e.g. "echo Building main".                                                                                                       |
 | post_build_cmds    | List of strings | No                                               | List of shell commands to be executed after building this project. Should be typed exactly as they would be in the shell, e.g. "./build/main".                                                                                                                |
+
     - `executable` objects
+
 | Field              | Type            | Required?                                        | Description                                                                                                                                                                                                                                                   |
 |--------------------|-----------------|--------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | name               | String          | No                                               | Name to be used for this target. Given to "-t" when building/cleaning/purifying/zipping a single target.                                                                                                                                                      |
@@ -135,6 +138,7 @@ def get_project_targets():
 | local_dependencies | List of strings | No                                               | List of target.library objects that this program is dependent on. This needs to be the actual target.library object as the object's build method will be invoked by the program when this executable is being built, to ensure that all files are up to date. |
 | pre_build_cmds     | List of strings | No                                               | List of shell commands to be executed prior to building this project. Should be typed exactly as they would be in the shell, e.g. "echo Building main".                                                                                                       |
 | post_build_cmds    | List of strings | No                                               | List of shell commands to be executed after building this project. Should be typed exactly as they would be in the shell, e.g. "./build/main".                                                                                                                |
+
 4) If you're planning on using the Dockerfile:
     - Inspect the Dockerfile to see if there are any additional programs you'll want. Only `build-essentials` is required for normal GCC projects.
     - Download and install Docker. Ensure it is running.
