@@ -162,7 +162,7 @@ def get_project_targets():
 
 Or, if you're using Docker:
 
-`docker run -it --rm -v ${PWD}:/app devenv-simple-build-system /bin/bash -c "./Python-Build-System/make.py -b"`,
+`docker run -it --rm -v ${PWD}:/app <NAME> /bin/bash -c "./Python-Build-System/make.py -b"`,
 
 where `<NAME>` is the same name you gave the Docker container above.
 
