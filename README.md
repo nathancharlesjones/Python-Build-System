@@ -156,7 +156,7 @@ Or, if you're using Docker:
 
 `docker run -it --rm -v ${PWD}:/app devenv-simple-build-system /bin/bash -c "./Python-Build-System/make.py -b"`
 
-If you see an error like `bash: ./Simple-Build-System/make.py: /bin/python3^M: bad interpreter: No such file or directory` it's probably because you're editing make.py on Windows (and using Windows line endings, CRLF) but the file is being run on a Unix machine (which is expecting Unix line endings, LF only). If this is the problem, you'll need to figure out how to change to Unix line endings. The simplest fix seems to be to change the default line ending in your text editor; I use Sublime Text and [this thread](https://stackoverflow.com/questions/39680585/how-do-configure-sublime-to-always-convert-to-unix-line-endings-on-save) recommended I add the following keys to my user settings:
+If you see an error like `bash: ./Simple-Build-System/make.py: /bin/python3^M: bad interpreter: No such file or directory` it's probably because you're editing `make.py` on Windows (and using Windows line endings, CRLF) but the file is being run on a Unix machine (which is expecting Unix line endings, LF only). If this is the problem, you'll need to figure out how to change to Unix line endings. The simplest fix seems to be to change the default line ending in your text editor; I use Sublime Text and [this thread](https://stackoverflow.com/questions/39680585/how-do-configure-sublime-to-always-convert-to-unix-line-endings-on-save) recommended I add the following keys to my user settings:
 ```
 // Determines what character(s) are used to terminate each line in new files.
 // Valid values are 'system' (whatever the OS uses), 'windows' (CRLF) and
@@ -196,3 +196,21 @@ optional arguments:
 
 ## Why'd you do it?
 
+Apparently because I'm a glutton for punishment.
+
+In all seriousness, I was learning how to use CMake at the time and as much as I liked how easy it was to define and build a simple project, I felt like overall it was a complicated program that I might not be able to fully understand. And when I can't understand something, there inevitably seems to come a day when I'm forced to build my project in a specific way "because it works when I do that and it doesn't if I don't".
+
+At the same time, I was struck by the idea that entire projects can be built with something like three simple shell commands, of the format:
+1) For compiling object files: `COMPILER   COMPILER_FLAGS   DEFINES   INCLUDES   DEPENDENCY FLAGS   -c   SOURCE_FILE   -o   OBJECT_FILE`
+2) For building static libraries: `ARCHIVER   ARCHIVER_FLAGS   DEFINES   LIBRARY_FILE   OBJECT_FILES`
+3) For building executables: `LINKER   LINKER_FLAGS   LINKER_SCRIPT   DEFINES   INCLUDES   OBJECT_FILES   LIBRARY_DIRS   LIBRARIES   -o   EXECUTABLE`
+
+I thought, "Couldn't someone write a program that listed these parameters and just composed each command programatically to build an entire project?" I thought whole thing might only be a few dozen lines of Python.
+
+And I think maybe you could do it that succinctly, but my final script ended up being quite a bit longer in order to support:
+- Command-line arguments and their execution
+- Checking of input values (so a program with ".cpp" files has a C++ compiler listed, for instance)
+- Generating and checking dependencies so parts of a project aren't rebuilt if their dependencies haven't changed
+- Working with files and filepaths in the form of strings
+
+Ultimately I'm happy with the outcome. It feels much easier to use (and much easier to later extend!) than `make` while keeping the build folder uncluttered. Enjoy!
