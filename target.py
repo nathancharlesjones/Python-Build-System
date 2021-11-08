@@ -16,8 +16,8 @@ class target:
         for pre_build_cmd in self.pre_build_cmds:
             execute_shell_cmd(pre_build_cmd, verbose)
         
-        self.compile_object_files()
-        self.build_local_dependencies()
+        self.compile_object_files(verbose)
+        self.build_local_dependencies(verbose)
         
         if self.target_needs_building():
             build_cmd = self.form_build_cmd()
@@ -155,7 +155,7 @@ class executable(target):
         
         self.object_files = []
         for this_source_file in self.source_files:
-            self.object_files.append("{0}/{1}".format(self.build_dir,this_source_file.replace(".c", ".o")))
+            self.object_files.append("{0}/{1}".format(self.build_dir,this_source_file.replace(get_file_extension(this_source_file), ".o")))
         
         self.libraries = libraries
         
@@ -170,7 +170,7 @@ class executable(target):
 
     def form_build_cmd(self, verbose=False):
         linker_flags_str = ' '.join(self.linker_flags)
-        defines_str = ' '.join(self.defines)
+        defines_str = ' '.join(["-D"+define for define in self.defines])
         include_dirs_str = ' '.join(["-I "+inc_dir for inc_dir in self.include_dirs])
         object_files_str = ' '.join(self.object_files)
         library_dirs_str = ' '.join(["-L "+lib_dir for lib_dir in self.library_dirs])
@@ -292,7 +292,7 @@ class library(target):
         
         self.object_files = []
         for this_source_file in self.source_files:
-            self.object_files.append("{0}/{1}".format(self.build_dir,this_source_file.replace(".c", ".o")))
+            self.object_files.append("{0}/{1}".format(self.build_dir,this_source_file.replace(get_file_extension(this_source_file), ".o")))
         
         self.libraries = libraries
         
@@ -307,7 +307,7 @@ class library(target):
 
     def form_build_cmd(self, verbose=False):
         archiver_flags_str = ' '.join(self.archiver_flags)
-        defines_str = ' '.join(self.defines)
+        defines_str = ' '.join(["-D"+define for define in self.defines])
         object_files_str = ' '.join(self.object_files)
         return " ".join([self.archiver,archiver_flags_str,defines_str,self.target_file_and_path,object_files_str])
 

@@ -17,7 +17,7 @@ def main():
     # in project_targets.py)
     if target_was_specified(args):
         if valid_target_name(targets, args.target):
-            remove_all_from_dict_except(targets, args.target)
+            remove_from_dict_all_except(targets, args.target)
         else:
             raise ValueError("{0} not a valid target.".format(args.target))
 
