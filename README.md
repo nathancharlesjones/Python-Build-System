@@ -195,8 +195,8 @@ optional arguments:
                         each of the build targets and any zipped folders.
   -p, --purify          Purify the build folder. Removes the build folder and all subfiles and 
                         subdirectories for each target.
-  -z, --zip             Purify the build folder. Removes the build folder and all subfiles and 
-                        subdirectories for each target.
+  -z, --zip             Creates a zip file in the build folder alongside the library/executable that contains the target and any local 
+                        dependencies that were used to build the target.
   -l, --list            List the available target names, as defined in 'project_targets.py'. When used 
                         with verbose option, list all settings for all available targets.
   -v, --verbose         Verbose output. Show the recipe configuration prior to it being built and show 
