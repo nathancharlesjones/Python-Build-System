@@ -11,59 +11,58 @@ It accepts a number of command-line arguments that allow for:
 - zipping the project, or
 - doing any of the above for a single target or all of the targets defined in `project_targets.py`.
 
-It also comes with a Dockerfile I've been using to experiment with cross-platform development.
+Because it's written in Python, Python Build System can be easily extended to incorporate such tools as [pyOCD](https://github.com/pyocd/pyOCD), [pyGDB](https://pypi.org/project/pygdb/), [pyLink](https://pylink.readthedocs.io/en/latest/), or [pyFTDI](https://eblot.github.io/pyftdi/) to create a singular command-line interface for all of your developing, debugging, and testing needs.
+
+It also comes with a Dockerfile I've been using to experiment with cross-platform development for use on Windows machines.
 
 Example `project_targets.py`:
 
 ```
 import target
 
-def get_project_targets():
-    targets = {}
+targets = {}
 
-    libtest_name = "libtest"
-    libtest_build_dir = "build/" + libtest_name
-    libtest_target = libtest_name + ".a"
+libtest_name = "libtest"
+libtest_build_dir = "build/" + libtest_name
+libtest_target = libtest_name + ".a"
 
-    libtest = target.library(
-        name                =   libtest_name,
-        c_compiler          =   "gcc",
-        archiver            =   "ar",
-        archiver_flags      =   ['rcs'],
-        build_dir           =   libtest_build_dir,
-        target              =   libtest_target,
-        source_files        =   ["lib/test/src/test_func.c"],
-        include_dirs        =   ["lib/test/inc"],
-        pre_build_cmds      =   ["echo Beginning build for " + libtest_name],
-        post_build_cmds     =   ["echo Finished building " + libtest_name]
-    )
+libtest = target.library(
+    name                =   libtest_name,
+    c_compiler          =   "gcc",
+    archiver            =   "ar",
+    archiver_flags      =   ['rcs'],
+    build_dir           =   libtest_build_dir,
+    target              =   libtest_target,
+    source_files        =   ["lib/test/src/test_func.c"],
+    include_dirs        =   ["lib/test/inc"],
+    pre_build_cmds      =   ["echo Beginning build for " + libtest_name],
+    post_build_cmds     =   ["echo Finished building " + libtest_name]
+)
 
-    targets[libtest.name] = libtest
+targets[libtest.name] = libtest
 
-    hello_world_name = "hello_world"
-    hello_world_build_dir = "build/" + hello_world_name
-    hello_world_target = hello_world_name + ".exe"
+hello_world_name = "hello_world"
+hello_world_build_dir = "build/" + hello_world_name
+hello_world_target = hello_world_name + ".exe"
 
-    hello_world = target.executable(
-        name                =   hello_world_name,
-        c_compiler          =   'gcc',
-        c_flags             =   ['-g3','-O0'],
-        linker              =   'gcc',
-        build_dir           =   hello_world_build_dir,
-        target              =   hello_world_target,
-        source_files        =   ['src/main.c'],
-        include_dirs        =   ["lib/test/inc"],
-        libraries           =   ["test", "m"],
-        library_dirs        =   [libtest_build_dir],
-        local_dependencies  =   [libtest],
-        pre_build_cmds      =   ["echo Beginning build for " + hello_world_name],
-        post_build_cmds     =   ["echo Finished building " + hello_world_name,
-                                 "./{0}/{1}".format(hello_world_build_dir, hello_world_target)]
-    )
+hello_world = target.executable(
+    name                =   hello_world_name,
+    c_compiler          =   'gcc',
+    c_flags             =   ['-g3','-O0'],
+    linker              =   'gcc',
+    build_dir           =   hello_world_build_dir,
+    target              =   hello_world_target,
+    source_files        =   ['src/main.c'],
+    include_dirs        =   ["lib/test/inc"],
+    libraries           =   ["test", "m"],
+    library_dirs        =   [libtest_build_dir],
+    local_dependencies  =   [libtest],
+    pre_build_cmds      =   ["echo Beginning build for " + hello_world_name],
+    post_build_cmds     =   ["echo Finished building " + hello_world_name,
+                             "./{0}/{1}".format(hello_world_build_dir, hello_world_target)]
+)
 
-    targets[hello_world.name] = hello_world
-
-    return targets
+targets[hello_world.name] = hello_world
 ```
 
 ## How do I use it?
@@ -88,14 +87,11 @@ Check out [this sample project](https://github.com/nathancharlesjones/Python-Bui
 ```
 import target
 
-def get_project_targets():
-    targets = {}
+targets = {}
 
-    # Define a new target, e.g. "new_library = target.library(...) or main = target.executable(...)"
+# Define a new target, e.g. "new_library = target.library(...) or main = target.executable(...)"
 
-    # Add the target to the dictionary of targets: targets[main.name] = main
-
-    return targets
+# Add the target to the dictionary of targets: targets[main.name] = main
 ```
 3) The Python module `target.py` defines two types of targets: `library` and `executable`. A `library` target builds a static library and `executable` builds an executable binary. They accept the parameters below. Not all are required; `make.py` should warn you when something is missing that's required.
 
@@ -159,6 +155,12 @@ def get_project_targets():
 5) From a shell on your system, navigate now to your project's root folder. Run the following to build your project:
 
 `./Python-Build-System/make.py -b`
+
+---
+**NOTE**
+
+The filepaths used in these Python files are only really set up for a Unix system. If you're trying to build a project with this script on Windows, you'll need to use Docker, or rewrite the parts of the files that use Unix-specific filepath conventions.
+---
 
 Or, if you're using Docker:
 

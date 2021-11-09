@@ -7,8 +7,41 @@ import os
 class target:
     """ Parent class for defining project targets. """
 
-    def __init__(self):
-        raise NameError("Class target does not support creating objects; use target.executable or target.library instead.")
+    def __init__(self,build_dir,target,source_files,name='unnamed target',
+        assembler='',as_flags=[],c_compiler='',c_flags=[],cpp_compiler='',cpp_flags=[],
+        defines=[],include_dirs=[],libraries=[],library_dirs=[],
+        local_dependencies=[],pre_build_cmds=[],post_build_cmds=[]):
+        #raise NameError("Class target does not support creating objects; use target.executable or target.library instead.")
+        self.name = name
+        self.source_files = source_files
+        if len(self.source_files) == 0:
+            raise ValueError("No source files listed for {0}".format(self.name))        
+        self.cpp_compiler = cpp_compiler
+        self.cpp_flags = cpp_flags
+        if list_of_files_contains_cpp_files(self.source_files) and self.cpp_compiler == '':
+            raise ValueError("C++ compiler not specified though .cpp files are listed amongst the source files.")
+        self.c_compiler = c_compiler        
+        self.c_flags = c_flags
+        if list_of_files_contains_c_files(self.source_files) and self.c_compiler == '':
+            raise ValueError("C compiler not specified though .c files are listed amongst the source files; use the same program as the C++ compiler if that is intended to compile both.")        
+        self.assembler = assembler
+        self.as_flags = as_flags
+        if list_of_files_contains_s_or_S_files(self.source_files) and self.assembler == '':
+            raise ValueError("Assembler not specified though .s/.S files are listed in the source files; use the same program as the C/C++ compiler if that is intended to compile/assemble both.")        
+        self.defines = defines        
+        self.build_dir = build_dir        
+        self.target = target
+        self.target_file_and_path = "{0}/{1}".format(self.build_dir, self.target)
+        self.include_dirs = include_dirs
+        self.object_files = []
+        for this_source_file in self.source_files:
+            self.object_files.append("{0}/{1}".format(self.build_dir,this_source_file.replace(get_file_extension(this_source_file), ".o")))
+        self.libraries = libraries
+        self.library_dirs = library_dirs
+        self.local_dependencies = local_dependencies
+        self.local_dep_target_list = ["{0}/{1}".format(dep.build_dir,dep.target) for dep in self.local_dependencies]
+        self.pre_build_cmds = pre_build_cmds
+        self.post_build_cmds = post_build_cmds
     
     def build(self, verbose=False):
         for pre_build_cmd in self.pre_build_cmds:
@@ -115,56 +148,16 @@ class executable(target):
         defines=[],linker_flags=[],include_dirs=[],libraries=[],library_dirs=[],
         linker_script='',local_dependencies=[],pre_build_cmds=[],post_build_cmds=[]):
         """ Helpful docstring """
-        self.name = name
 
-        self.source_files = source_files
+        super().__init__(build_dir,target,source_files,name,
+        assembler,as_flags,c_compiler,c_flags,cpp_compiler,cpp_flags,
+        defines,include_dirs,libraries,library_dirs,
+        local_dependencies,pre_build_cmds,post_build_cmds)
 
-        if len(self.source_files) == 0:
-            raise ValueError("No source files listed for {0}".format(self.name))
-        
-        self.cpp_compiler = cpp_compiler
-        self.cpp_flags = cpp_flags
-        if list_of_files_contains_cpp_files(self.source_files) and self.cpp_compiler == '':
-            raise ValueError("C++ compiler not specified though .cpp files are listed amongst the source files.")
-
-        self.c_compiler = c_compiler        
-        self.c_flags = c_flags
-        if list_of_files_contains_c_files(self.source_files) and self.c_compiler == '':
-            raise ValueError("C compiler not specified though .c files are listed amongst the source files; use the same program as the C++ compiler if that is intended to compile both.")
-        
-        self.assembler = assembler
-        self.as_flags = as_flags
-        if list_of_files_contains_s_or_S_files(self.source_files) and self.assembler == '':
-            raise ValueError("Assembler not specified though .s/.S files are listed in the source files; use the same program as the C/C++ compiler if that is intended to compile/assemble both.")
-        
-        self.defines = defines
-        
         self.linker = linker
         self.linker_flags = linker_flags
         self.linker_script = linker_script
         
-        self.build_dir = build_dir
-        
-        self.target = target
-
-        self.target_file_and_path = "{0}/{1}".format(self.build_dir, self.target)
-        
-        self.include_dirs = include_dirs
-        
-        self.object_files = []
-        for this_source_file in self.source_files:
-            self.object_files.append("{0}/{1}".format(self.build_dir,this_source_file.replace(get_file_extension(this_source_file), ".o")))
-        
-        self.libraries = libraries
-        
-        self.library_dirs = library_dirs
-        
-        self.local_dependencies = local_dependencies
-        self.local_dep_target_list = ["{0}/{1}".format(dep.build_dir,dep.target) for dep in self.local_dependencies]
-        
-        self.pre_build_cmds = pre_build_cmds
-        
-        self.post_build_cmds = post_build_cmds
 
     def form_build_cmd(self, verbose=False):
         linker_flags_str = ' '.join(self.linker_flags)
@@ -183,66 +176,27 @@ class executable(target):
             print(self)
 
     def __str__(self):
-        repr = '''{1} is defined as follows:
-- {0}{1}
-- {2}{3}
-- {4}{5}
-- {6}{7}
-- {8}{9}
-- {10}{11}
-- {12}{13}
-- {14}{15}
-- {16}{17}
-- {18}{19}
-- {20}{21}
-- {22}{23}
-- {24}{25}
-- {26}{27}
-- {28}{29}
-- {30}{31}
-- {32}{33}
-- {34}{35}
-- {36}{37}
-- {38}{39} '''.format( "name:".ljust(25,'.'),
-                        self.name,
-                        "target:".ljust(25,'.'),
-                        self.target,
-                        "build_dir:".ljust(25,'.'),
-                        self.build_dir,
-                        "assembler:".ljust(25,'.'),
-                        self.assembler,
-                        "as_flags:".ljust(25,'.'),
-                        self.as_flags,
-                        "c_compiler:".ljust(25,'.'),
-                        self.c_compiler,
-                        "c_flags:".ljust(25,'.'),
-                        self.c_flags,
-                        "cpp_compiler:".ljust(25,'.'),
-                        self.cpp_compiler,
-                        "cpp_flags:".ljust(25,'.'),
-                        self.cpp_flags,
-                        "linker:".ljust(25,'.'),
-                        self.linker,
-                        "linker_flags:".ljust(25,'.'),
-                        self.linker_flags,
-                        "linker_script:".ljust(25,'.'),
-                        self.linker_script,
-                        "defines:".ljust(25,'.'),
-                        self.defines,
-                        "include_dirs:".ljust(25,'.'),
-                        self.include_dirs,
-                        "source_files:".ljust(25,'.'),
-                        self.source_files,
-                        "libraries:".ljust(25,'.'),
-                        self.libraries,
-                        "library_dirs:".ljust(25,'.'),
-                        self.library_dirs,
-                        "local_dependencies:".ljust(25,'.'),
-                        [dep.name for dep in self.local_dependencies],
-                        "pre_build_cmds:".ljust(25,'.'),
-                        self.pre_build_cmds,
-                        "post_build_cmds:".ljust(25,'.'),
-                        self.post_build_cmds)
+        repr =  self.name + " is defined as follows:\n" + \
+                "- name:".ljust(25,'.') + self.name + "\n" + \
+                "- target:".ljust(25,'.') + self.target + "\n" + \
+                "- build_dir:".ljust(25,'.') + self.build_dir + "\n" + \
+                "- assembler:".ljust(25,'.') + self.assembler + "\n" + \
+                "- as_flags:".ljust(25,'.') + str(self.as_flags) + "\n" + \
+                "- c_compiler:".ljust(25,'.') + self.c_compiler + "\n" + \
+                "- c_flags:".ljust(25,'.') + str(self.c_flags) + "\n" + \
+                "- cpp_compiler:".ljust(25,'.') + self.cpp_compiler + "\n" + \
+                "- cpp_flags:".ljust(25,'.') + str(self.cpp_flags) + "\n" + \
+                "- linker:".ljust(25,'.') + self.linker + "\n" + \
+                "- linker_flags:".ljust(25,'.') + str(self.linker_flags) + "\n" + \
+                "- linker_script:".ljust(25,'.') + self.linker_script + "\n" + \
+                "- defines:".ljust(25,'.') + str(self.defines) + "\n" + \
+                "- include_dirs:".ljust(25,'.') + str(self.include_dirs) + "\n" + \
+                "- source_files:".ljust(25,'.') + str(self.source_files) + "\n" + \
+                "- libraries:".ljust(25,'.') + str(self.libraries) + "\n" + \
+                "- library_dirs:".ljust(25,'.') + str(self.library_dirs) + "\n" + \
+                "- local_dependencies:".ljust(25,'.') + str([dep.name for dep in self.local_dependencies]) + "\n" + \
+                "- pre_build_cmds:".ljust(25,'.') + str(self.pre_build_cmds) + "\n" + \
+                "- post_build_cmds:".ljust(25,'.') + str(self.post_build_cmds)
         return repr
 
 class library(target):
@@ -253,55 +207,15 @@ class library(target):
         defines=[],archiver_flags=[],include_dirs=[],libraries=[],
         library_dirs=[],local_dependencies=[],pre_build_cmds=[],post_build_cmds=[]):
         """ Helpful docstring """
-        self.name = name
 
-        self.source_files = source_files
-        if len(self.source_files) == 0:
-            raise ValueError("No source files listed for {0}".format(self.name))
-        
-        self.cpp_compiler = cpp_compiler
-        self.cpp_flags = cpp_flags
-        if list_of_files_contains_cpp_files(self.source_files) and self.cpp_compiler == '':
-            raise ValueError("C++ compiler not specified though .cpp files are listed amongst the source files.")
+        super().__init__(build_dir,target,source_files,name,
+        assembler,as_flags,c_compiler,c_flags,cpp_compiler,cpp_flags,
+        defines,include_dirs,libraries,library_dirs,
+        local_dependencies,pre_build_cmds,post_build_cmds)
 
-        self.c_compiler = c_compiler        
-        self.c_flags = c_flags
-        if list_of_files_contains_c_files(self.source_files) and self.c_compiler == '':
-            raise ValueError("C compiler not specified though .c files are listed amongst the source files; use the same program as the C++ compiler if that is intended to compile both.")
-        
-        self.assembler = assembler
-        self.as_flags = as_flags
-        if list_of_files_contains_s_or_S_files(self.source_files) and self.assembler == '':
-            raise ValueError("Assembler not specified though .s/.S files are listed in the source files; use the same program as the C/C++ compiler if that is intended to compile/assemble both.")
-        
-        self.defines = defines
-        
         self.archiver = archiver
-        
         self.archiver_flags = archiver_flags
-        
-        self.build_dir = build_dir
-        
-        self.target = target
 
-        self.target_file_and_path = "{0}/{1}".format(self.build_dir, self.target)
-        
-        self.include_dirs = include_dirs
-        
-        self.object_files = []
-        for this_source_file in self.source_files:
-            self.object_files.append("{0}/{1}".format(self.build_dir,this_source_file.replace(get_file_extension(this_source_file), ".o")))
-        
-        self.libraries = libraries
-        
-        self.library_dirs = library_dirs
-        
-        self.local_dependencies = local_dependencies
-        self.local_dep_target_list = ["{0}/{1}".format(dep.build_dir,dep.target) for dep in self.local_dependencies]
-        
-        self.pre_build_cmds = pre_build_cmds
-        
-        self.post_build_cmds = post_build_cmds
 
     def form_build_cmd(self, verbose=False):
         archiver_flags_str = ' '.join(self.archiver_flags)
@@ -316,61 +230,24 @@ class library(target):
             print(self)
 
     def __str__(self):
-        repr = '''{1} is defined as follows:
-- {0}{1}
-- {2}{3}
-- {4}{5}
-- {6}{7}
-- {8}{9}
-- {10}{11}
-- {12}{13}
-- {14}{15}
-- {16}{17}
-- {18}{19}
-- {20}{21}
-- {22}{23}
-- {24}{25}
-- {26}{27}
-- {28}{29}
-- {30}{31}
-- {32}{33}
-- {34}{35}
-- {36}{37} '''.format( "name:".ljust(25,'.'),
-                        self.name,
-                        "target:".ljust(25,'.'),
-                        self.target,
-                        "build_dir:".ljust(25,'.'),
-                        self.build_dir,
-                        "assembler:".ljust(25,'.'),
-                        self.assembler,
-                        "as_flags:".ljust(25,'.'),
-                        self.as_flags,
-                        "c_compiler:".ljust(25,'.'),
-                        self.c_compiler,
-                        "c_flags:".ljust(25,'.'),
-                        self.c_flags,
-                        "cpp_compiler:".ljust(25,'.'),
-                        self.cpp_compiler,
-                        "cpp_flags:".ljust(25,'.'),
-                        self.cpp_flags,
-                        "archiver:".ljust(25,'.'),
-                        self.archiver,
-                        "archiver_flags:".ljust(25,'.'),
-                        self.archiver_flags,
-                        "defines:".ljust(25,'.'),
-                        self.defines,
-                        "include_dirs:".ljust(25,'.'),
-                        self.include_dirs,
-                        "source_files:".ljust(25,'.'),
-                        self.source_files,
-                        "libraries:".ljust(25,'.'),
-                        self.libraries,
-                        "library_dirs:".ljust(25,'.'),
-                        self.library_dirs,
-                        "local_dependencies:".ljust(25,'.'),
-                        [dep.name for dep in self.local_dependencies],
-                        "pre_build_cmds:".ljust(25,'.'),
-                        self.pre_build_cmds,
-                        "post_build_cmds:".ljust(25,'.'),
-                        self.post_build_cmds)
+        repr =  self.name + " is defined as follows:\n" + \
+                "- name:".ljust(25,'.') + self.name + "\n" + \
+                "- target:".ljust(25,'.') + self.target + "\n" + \
+                "- build_dir:".ljust(25,'.') + self.build_dir + "\n" + \
+                "- assembler:".ljust(25,'.') + self.assembler + "\n" + \
+                "- as_flags:".ljust(25,'.') + str(self.as_flags) + "\n" + \
+                "- c_compiler:".ljust(25,'.') + self.c_compiler + "\n" + \
+                "- c_flags:".ljust(25,'.') + str(self.c_flags) + "\n" + \
+                "- cpp_compiler:".ljust(25,'.') + self.cpp_compiler + "\n" + \
+                "- cpp_flags:".ljust(25,'.') + str(self.cpp_flags) + "\n" + \
+                "- archiver:".ljust(25,'.') + self.archiver + "\n" + \
+                "- archiver_flags:".ljust(25,'.') + str(self.archiver_flags) + "\n" + \
+                "- defines:".ljust(25,'.') + str(self.defines) + "\n" + \
+                "- include_dirs:".ljust(25,'.') + str(self.include_dirs) + "\n" + \
+                "- source_files:".ljust(25,'.') + str(self.source_files) + "\n" + \
+                "- libraries:".ljust(25,'.') + str(self.libraries) + "\n" + \
+                "- library_dirs:".ljust(25,'.') + str(self.library_dirs) + "\n" + \
+                "- local_dependencies:".ljust(25,'.') + str([dep.name for dep in self.local_dependencies]) + "\n" + \
+                "- pre_build_cmds:".ljust(25,'.') + str(self.pre_build_cmds) + "\n" + \
+                "- post_build_cmds:".ljust(25,'.') + str(self.post_build_cmds)
         return repr

@@ -3,14 +3,11 @@
 from helper import (get_command_line_args, target_was_specified,
                     valid_target_name, remove_from_dict_all_except)
 
-from project_targets import get_project_targets
+from project_targets import targets
 
 def main():
     # Start the CLI and parse any command line values/flags
     args = get_command_line_args()
-
-    # Create dictionary of project targets; the default value includes all defined targets
-    targets = get_project_targets()
 
     # Overwrite target dictionary if only one target was selected on the command line
     # (or raise a ValueError if the target that was specified is not one that was defined
