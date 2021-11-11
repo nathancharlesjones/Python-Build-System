@@ -7,6 +7,9 @@ from functools import reduce
 def at_least_one_dependency_is_newer_than(file, dep_list):
     return reduce(lambda a, b: a or b, [os.path.getmtime(dep) > os.path.getmtime(file) for dep in dep_list])
 
+def convert_list_to_str_for_printing(list):
+    return str(list).replace(", ",",\n" + " "*26)
+
 def execute_shell_cmd(cmd, verbose):
     if verbose:
         print("Executing: " + cmd)

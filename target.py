@@ -1,7 +1,8 @@
 from helper import (execute_shell_cmd, find, get_dependencies_list,
                     file_does_not_exist, at_least_one_dependency_is_newer_than,
                     get_file_extension, list_of_files_contains_c_files,
-                    list_of_files_contains_cpp_files, list_of_files_contains_s_or_S_files)
+                    list_of_files_contains_cpp_files, list_of_files_contains_s_or_S_files,
+                    convert_list_to_str_for_printing)
 import os
 
 class target:
@@ -157,7 +158,6 @@ class executable(target):
         self.linker = linker
         self.linker_flags = linker_flags
         self.linker_script = linker_script
-        
 
     def form_build_cmd(self, verbose=False):
         linker_flags_str = ' '.join(self.linker_flags)
@@ -181,22 +181,22 @@ class executable(target):
                 "- target:".ljust(25,'.') + self.target + "\n" + \
                 "- build_dir:".ljust(25,'.') + self.build_dir + "\n" + \
                 "- assembler:".ljust(25,'.') + self.assembler + "\n" + \
-                "- as_flags:".ljust(25,'.') + str(self.as_flags) + "\n" + \
+                "- as_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.as_flags) + "\n" + \
                 "- c_compiler:".ljust(25,'.') + self.c_compiler + "\n" + \
-                "- c_flags:".ljust(25,'.') + str(self.c_flags) + "\n" + \
+                "- c_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.c_flags) + "\n" + \
                 "- cpp_compiler:".ljust(25,'.') + self.cpp_compiler + "\n" + \
-                "- cpp_flags:".ljust(25,'.') + str(self.cpp_flags) + "\n" + \
+                "- cpp_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.cpp_flags) + "\n" + \
                 "- linker:".ljust(25,'.') + self.linker + "\n" + \
-                "- linker_flags:".ljust(25,'.') + str(self.linker_flags) + "\n" + \
+                "- linker_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.linker_flags) + "\n" + \
                 "- linker_script:".ljust(25,'.') + self.linker_script + "\n" + \
-                "- defines:".ljust(25,'.') + str(self.defines) + "\n" + \
-                "- include_dirs:".ljust(25,'.') + str(self.include_dirs) + "\n" + \
-                "- source_files:".ljust(25,'.') + str(self.source_files) + "\n" + \
-                "- libraries:".ljust(25,'.') + str(self.libraries) + "\n" + \
-                "- library_dirs:".ljust(25,'.') + str(self.library_dirs) + "\n" + \
-                "- local_dependencies:".ljust(25,'.') + str([dep.name for dep in self.local_dependencies]) + "\n" + \
-                "- pre_build_cmds:".ljust(25,'.') + str(self.pre_build_cmds) + "\n" + \
-                "- post_build_cmds:".ljust(25,'.') + str(self.post_build_cmds)
+                "- defines:".ljust(25,'.') + convert_list_to_str_for_printing(self.defines) + "\n" + \
+                "- include_dirs:".ljust(25,'.') + convert_list_to_str_for_printing(self.include_dirs) + "\n" + \
+                "- source_files:".ljust(25,'.') + convert_list_to_str_for_printing(self.source_files) + "\n" + \
+                "- libraries:".ljust(25,'.') + convert_list_to_str_for_printing(self.libraries) + "\n" + \
+                "- library_dirs:".ljust(25,'.') + convert_list_to_str_for_printing(self.library_dirs) + "\n" + \
+                "- local_dependencies:".ljust(25,'.') + convert_list_to_str_for_printing([dep.name for dep in self.local_dependencies]) + "\n" + \
+                "- pre_build_cmds:".ljust(25,'.') + convert_list_to_str_for_printing(self.pre_build_cmds) + "\n" + \
+                "- post_build_cmds:".ljust(25,'.') + convert_list_to_str_for_printing(self.post_build_cmds)
         return repr
 
 class library(target):
@@ -216,7 +216,6 @@ class library(target):
         self.archiver = archiver
         self.archiver_flags = archiver_flags
 
-
     def form_build_cmd(self, verbose=False):
         archiver_flags_str = ' '.join(self.archiver_flags)
         defines_str = ' '.join(["-D"+define for define in self.defines])
@@ -235,19 +234,19 @@ class library(target):
                 "- target:".ljust(25,'.') + self.target + "\n" + \
                 "- build_dir:".ljust(25,'.') + self.build_dir + "\n" + \
                 "- assembler:".ljust(25,'.') + self.assembler + "\n" + \
-                "- as_flags:".ljust(25,'.') + str(self.as_flags) + "\n" + \
+                "- as_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.as_flags) + "\n" + \
                 "- c_compiler:".ljust(25,'.') + self.c_compiler + "\n" + \
-                "- c_flags:".ljust(25,'.') + str(self.c_flags) + "\n" + \
+                "- c_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.c_flags) + "\n" + \
                 "- cpp_compiler:".ljust(25,'.') + self.cpp_compiler + "\n" + \
-                "- cpp_flags:".ljust(25,'.') + str(self.cpp_flags) + "\n" + \
+                "- cpp_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.cpp_flags) + "\n" + \
                 "- archiver:".ljust(25,'.') + self.archiver + "\n" + \
-                "- archiver_flags:".ljust(25,'.') + str(self.archiver_flags) + "\n" + \
-                "- defines:".ljust(25,'.') + str(self.defines) + "\n" + \
-                "- include_dirs:".ljust(25,'.') + str(self.include_dirs) + "\n" + \
-                "- source_files:".ljust(25,'.') + str(self.source_files) + "\n" + \
-                "- libraries:".ljust(25,'.') + str(self.libraries) + "\n" + \
-                "- library_dirs:".ljust(25,'.') + str(self.library_dirs) + "\n" + \
-                "- local_dependencies:".ljust(25,'.') + str([dep.name for dep in self.local_dependencies]) + "\n" + \
-                "- pre_build_cmds:".ljust(25,'.') + str(self.pre_build_cmds) + "\n" + \
-                "- post_build_cmds:".ljust(25,'.') + str(self.post_build_cmds)
+                "- archiver_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.archiver_flags) + "\n" + \
+                "- defines:".ljust(25,'.') + convert_list_to_str_for_printing(self.defines) + "\n" + \
+                "- include_dirs:".ljust(25,'.') + convert_list_to_str_for_printing(self.include_dirs) + "\n" + \
+                "- source_files:".ljust(25,'.') + convert_list_to_str_for_printing(self.source_files) + "\n" + \
+                "- libraries:".ljust(25,'.') + convert_list_to_str_for_printing(self.libraries) + "\n" + \
+                "- library_dirs:".ljust(25,'.') + convert_list_to_str_for_printing(self.library_dirs) + "\n" + \
+                "- local_dependencies:".ljust(25,'.') + convert_list_to_str_for_printing([dep.name for dep in self.local_dependencies]) + "\n" + \
+                "- pre_build_cmds:".ljust(25,'.') + convert_list_to_str_for_printing(self.pre_build_cmds) + "\n" + \
+                "- post_build_cmds:".ljust(25,'.') + convert_list_to_str_for_printing(self.post_build_cmds)
         return repr
