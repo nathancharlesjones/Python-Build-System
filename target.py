@@ -8,6 +8,8 @@ import os
 class target:
     """ Parent class for defining project targets. """
 
+    self.print_padding = 25
+
     def __init__(self,build_dir,target,source_files,name='unnamed target',
         assembler='',as_flags=[],c_compiler='',c_flags=[],cpp_compiler='',cpp_flags=[],
         defines=[],include_dirs=[],libraries=[],library_dirs=[],
@@ -176,27 +178,28 @@ class executable(target):
             print(self)
 
     def __str__(self):
+        padding = self.print_padding
         repr =  self.name + " is defined as follows:\n" + \
-                "- name:".ljust(25,'.') + self.name + "\n" + \
-                "- target:".ljust(25,'.') + self.target + "\n" + \
-                "- build_dir:".ljust(25,'.') + self.build_dir + "\n" + \
-                "- assembler:".ljust(25,'.') + self.assembler + "\n" + \
-                "- as_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.as_flags) + "\n" + \
-                "- c_compiler:".ljust(25,'.') + self.c_compiler + "\n" + \
-                "- c_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.c_flags) + "\n" + \
-                "- cpp_compiler:".ljust(25,'.') + self.cpp_compiler + "\n" + \
-                "- cpp_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.cpp_flags) + "\n" + \
-                "- linker:".ljust(25,'.') + self.linker + "\n" + \
-                "- linker_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.linker_flags) + "\n" + \
-                "- linker_script:".ljust(25,'.') + self.linker_script + "\n" + \
-                "- defines:".ljust(25,'.') + convert_list_to_str_for_printing(self.defines) + "\n" + \
-                "- include_dirs:".ljust(25,'.') + convert_list_to_str_for_printing(self.include_dirs) + "\n" + \
-                "- source_files:".ljust(25,'.') + convert_list_to_str_for_printing(self.source_files) + "\n" + \
-                "- libraries:".ljust(25,'.') + convert_list_to_str_for_printing(self.libraries) + "\n" + \
-                "- library_dirs:".ljust(25,'.') + convert_list_to_str_for_printing(self.library_dirs) + "\n" + \
-                "- local_dependencies:".ljust(25,'.') + convert_list_to_str_for_printing([dep.name for dep in self.local_dependencies]) + "\n" + \
-                "- pre_build_cmds:".ljust(25,'.') + convert_list_to_str_for_printing(self.pre_build_cmds) + "\n" + \
-                "- post_build_cmds:".ljust(25,'.') + convert_list_to_str_for_printing(self.post_build_cmds)
+                "- name:".ljust(padding,'.') + self.name + "\n" + \
+                "- target:".ljust(padding,'.') + self.target + "\n" + \
+                "- build_dir:".ljust(padding,'.') + self.build_dir + "\n" + \
+                "- assembler:".ljust(padding,'.') + self.assembler + "\n" + \
+                "- as_flags:".ljust(padding,'.') + convert_list_to_str_for_printing(self.as_flags, padding) + "\n" + \
+                "- c_compiler:".ljust(padding,'.') + self.c_compiler + "\n" + \
+                "- c_flags:".ljust(padding,'.') + convert_list_to_str_for_printing(self.c_flags, padding) + "\n" + \
+                "- cpp_compiler:".ljust(padding,'.') + self.cpp_compiler + "\n" + \
+                "- cpp_flags:".ljust(padding,'.') + convert_list_to_str_for_printing(self.cpp_flags, padding) + "\n" + \
+                "- linker:".ljust(padding,'.') + self.linker + "\n" + \
+                "- linker_flags:".ljust(padding,'.') + convert_list_to_str_for_printing(self.linker_flags, padding) + "\n" + \
+                "- linker_script:".ljust(padding,'.') + self.linker_script + "\n" + \
+                "- defines:".ljust(padding,'.') + convert_list_to_str_for_printing(self.defines, padding) + "\n" + \
+                "- include_dirs:".ljust(padding,'.') + convert_list_to_str_for_printing(self.include_dirs, padding) + "\n" + \
+                "- source_files:".ljust(padding,'.') + convert_list_to_str_for_printing(self.source_files, padding) + "\n" + \
+                "- libraries:".ljust(padding,'.') + convert_list_to_str_for_printing(self.libraries, padding) + "\n" + \
+                "- library_dirs:".ljust(padding,'.') + convert_list_to_str_for_printing(self.library_dirs, padding) + "\n" + \
+                "- local_dependencies:".ljust(padding,'.') + convert_list_to_str_for_printing([dep.name for dep in self.local_dependencies], padding) + "\n" + \
+                "- pre_build_cmds:".ljust(padding,'.') + convert_list_to_str_for_printing(self.pre_build_cmds, padding) + "\n" + \
+                "- post_build_cmds:".ljust(padding,'.') + convert_list_to_str_for_printing(self.post_build_cmds, padding)
         return repr
 
 class library(target):
@@ -229,24 +232,25 @@ class library(target):
             print(self)
 
     def __str__(self):
+        padding = self.print_padding
         repr =  self.name + " is defined as follows:\n" + \
-                "- name:".ljust(25,'.') + self.name + "\n" + \
-                "- target:".ljust(25,'.') + self.target + "\n" + \
-                "- build_dir:".ljust(25,'.') + self.build_dir + "\n" + \
-                "- assembler:".ljust(25,'.') + self.assembler + "\n" + \
-                "- as_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.as_flags) + "\n" + \
-                "- c_compiler:".ljust(25,'.') + self.c_compiler + "\n" + \
-                "- c_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.c_flags) + "\n" + \
-                "- cpp_compiler:".ljust(25,'.') + self.cpp_compiler + "\n" + \
-                "- cpp_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.cpp_flags) + "\n" + \
-                "- archiver:".ljust(25,'.') + self.archiver + "\n" + \
-                "- archiver_flags:".ljust(25,'.') + convert_list_to_str_for_printing(self.archiver_flags) + "\n" + \
-                "- defines:".ljust(25,'.') + convert_list_to_str_for_printing(self.defines) + "\n" + \
-                "- include_dirs:".ljust(25,'.') + convert_list_to_str_for_printing(self.include_dirs) + "\n" + \
-                "- source_files:".ljust(25,'.') + convert_list_to_str_for_printing(self.source_files) + "\n" + \
-                "- libraries:".ljust(25,'.') + convert_list_to_str_for_printing(self.libraries) + "\n" + \
-                "- library_dirs:".ljust(25,'.') + convert_list_to_str_for_printing(self.library_dirs) + "\n" + \
-                "- local_dependencies:".ljust(25,'.') + convert_list_to_str_for_printing([dep.name for dep in self.local_dependencies]) + "\n" + \
-                "- pre_build_cmds:".ljust(25,'.') + convert_list_to_str_for_printing(self.pre_build_cmds) + "\n" + \
-                "- post_build_cmds:".ljust(25,'.') + convert_list_to_str_for_printing(self.post_build_cmds)
+                "- name:".ljust(padding,'.') + self.name + "\n" + \
+                "- target:".ljust(padding,'.') + self.target + "\n" + \
+                "- build_dir:".ljust(padding,'.') + self.build_dir + "\n" + \
+                "- assembler:".ljust(padding,'.') + self.assembler + "\n" + \
+                "- as_flags:".ljust(padding,'.') + convert_list_to_str_for_printing(self.as_flags, padding) + "\n" + \
+                "- c_compiler:".ljust(padding,'.') + self.c_compiler + "\n" + \
+                "- c_flags:".ljust(padding,'.') + convert_list_to_str_for_printing(self.c_flags, padding) + "\n" + \
+                "- cpp_compiler:".ljust(padding,'.') + self.cpp_compiler + "\n" + \
+                "- cpp_flags:".ljust(padding,'.') + convert_list_to_str_for_printing(self.cpp_flags, padding) + "\n" + \
+                "- archiver:".ljust(padding,'.') + self.archiver + "\n" + \
+                "- archiver_flags:".ljust(padding,'.') + convert_list_to_str_for_printing(self.archiver_flags, padding) + "\n" + \
+                "- defines:".ljust(padding,'.') + convert_list_to_str_for_printing(self.defines, padding) + "\n" + \
+                "- include_dirs:".ljust(padding,'.') + convert_list_to_str_for_printing(self.include_dirs, padding) + "\n" + \
+                "- source_files:".ljust(padding,'.') + convert_list_to_str_for_printing(self.source_files, padding) + "\n" + \
+                "- libraries:".ljust(padding,'.') + convert_list_to_str_for_printing(self.libraries, padding) + "\n" + \
+                "- library_dirs:".ljust(padding,'.') + convert_list_to_str_for_printing(self.library_dirs, padding) + "\n" + \
+                "- local_dependencies:".ljust(padding,'.') + convert_list_to_str_for_printing([dep.name for dep in self.local_dependencies], padding) + "\n" + \
+                "- pre_build_cmds:".ljust(padding,'.') + convert_list_to_str_for_printing(self.pre_build_cmds, padding) + "\n" + \
+                "- post_build_cmds:".ljust(padding,'.') + convert_list_to_str_for_printing(self.post_build_cmds, padding)
         return repr
