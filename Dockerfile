@@ -13,6 +13,9 @@ RUN apt-get update
 # Get GNU tools
 RUN apt-get install -y build-essential gdb
 
+# Get LLVM tools
+RUN apt-get install -y clang lld llvm clang-tools
+
 # Get gdbgui
 # Usage: Start container with "-p 5000:5000" to expose port 5000 (the default port for gdbgui) to the
 # host machine. Run gdbgui from inside container with "gdbgui -r ./myprogram" to expose the gdbgui server 

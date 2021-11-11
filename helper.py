@@ -1,14 +1,13 @@
 import argparse
 import subprocess
 import os
-import fnmatch
 from functools import reduce
 
 def at_least_one_dependency_is_newer_than(file, dep_list):
     return reduce(lambda a, b: a or b, [os.path.getmtime(dep) > os.path.getmtime(file) for dep in dep_list])
 
-def convert_list_to_str_for_printing(list):
-    return str(list).replace(", ",",\n" + " "*26)
+def convert_list_to_str_for_printing(list, padding):
+    return str(list).replace(", ",",\n" + " "*(padding + 1))
 
 def execute_shell_cmd(cmd, verbose):
     if verbose:
@@ -22,14 +21,6 @@ def file_exists(file):
 
 def file_does_not_exist(file):
     return not file_exists(file)
-
-def find(pattern, path):
-    result = []
-    for root, dirs, files in os.walk(path):
-        for name in files:
-            if fnmatch.fnmatch(name, pattern):
-                result.append(os.path.join(root, name))
-    return result
 
 def get_command_line_args():
     parser = argparse.ArgumentParser(description="Python-based build system for C/C++ projects. Implemented like 'make' with an interface closer to 'cmake'. Builds projects that are defined in project_targets.py.")
