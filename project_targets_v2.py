@@ -50,6 +50,16 @@ targets[x86_debug.name] = x86_debug
 x86_release = target.executable([all_common, x86_common, release_build])
 targets[x86_release.name] = x86_release
 
+STM32F1_common = target.target(
+	name 				=  "blinky_STM32F1",
+	build_dir 			=  "build/STM32F1",
+	c_compiler 			=  "arm-none-eabi-gcc",
+	c_flags 			= ["-mcpu=cortex-m3",
+			 			   "-mthumb"],
+	assembler 			=  "arm-none-eabi-gcc",
+	as_flags 			= ["-x assembler-with-cpp"]
+)
+
 STM32F1_debug_name = "blinky_STM32F1_debug"
 STM32F1_debug_build_dir = "build/STM32F1/debug"
 STM32F1_debug_target = "{0}.elf".format(STM32F1_debug_name)
