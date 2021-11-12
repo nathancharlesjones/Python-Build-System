@@ -154,7 +154,8 @@ targets = {}
     - Wait. Building this Docker image takes a good 5-10 minutes on my system.
 5) From a shell on your system, navigate now to your project's root folder. Run the following to build your project:
 
-`./Python-Build-System/make.py -b`
+Unix: `./Python-Build-System/make.py -b`
+Windows: `python3 ./Python-Build-System/make.py -b`
 
 ---
 **NOTE**
